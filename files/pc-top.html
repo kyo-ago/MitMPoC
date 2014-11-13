@@ -64,8 +64,8 @@
   function makeIframeString (addressList, hash) {
     hash = hash || '';
     var iframeTexts = ['<iframe src="http://', '" width=1 height=1></iframe>'];
-    var separator = '/i.html' + hash + iframeTexts[1] + iframeTexts[0];
-    var joinedAddress = addressList.join(separator) + '/i.html' + hash;
+    var separator = '/' + hash + iframeTexts[1] + iframeTexts[0];
+    var joinedAddress = addressList.join(separator) + '/' + hash;
     return iframeTexts.join(joinedAddress);
   }
 })();

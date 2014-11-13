@@ -1,0 +1,10 @@
+CACHE MANIFEST
+
+CACHE:
+
+/robots.txt
+/m.html
+/i.html
+
+NETWORK:
+*

